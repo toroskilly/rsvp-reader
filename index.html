@@ -498,6 +498,30 @@
     gap: 12px;
   }
 
+  .text-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .text-actions button { white-space: nowrap; }
+
+  /* Mobile-only transport: step ±1 / jump ±10 buttons. Hidden by default
+     (desktop uses keyboard shortcuts shown in .hints); shown on touch
+     widths instead of the keyboard hints line. */
+  .mobile-transport {
+    display: none;
+    gap: 8px;
+  }
+  .mobile-transport button {
+    flex: 1;
+    min-height: 48px;
+    font-size: 22px;
+    line-height: 1;
+    padding: 8px 12px;
+    letter-spacing: 0;
+  }
+
   .file-row {
     display: flex;
     gap: 10px;
@@ -1193,6 +1217,11 @@
     /* Calibration */
     .calib-stats { flex-wrap: wrap; gap: 12px; }
     .calib-actions { flex-wrap: wrap; gap: 8px; }
+
+    /* Keyboard hints don't apply to touch; replace with on-screen
+       transport buttons so step/jump are still reachable. */
+    .hints { display: none; }
+    .mobile-transport { display: flex; }
   }
 
   /* Very narrow phones (iPhone SE class, ~360 px) */
@@ -1260,7 +1289,12 @@
         </label>
         <div class="status" id="status"></div>
       </div>
-      <button class="accent-btn" id="loadBtn">Load &amp; close</button>
+      <div class="text-actions">
+        <button id="textPasteBtn">Paste</button>
+        <button id="textSelectAllBtn">Select all</button>
+        <button id="textCloseBtn">Close</button>
+        <button class="accent-btn" id="loadBtn">Load &amp; close</button>
+      </div>
     </div>
   </div>
 
@@ -1287,6 +1321,13 @@
       </div>
     </div>
   </section>
+
+  <div class="mobile-transport" role="group" aria-label="Transport (mobile)">
+    <button id="jumpBackBtn" aria-label="Back ten words">«</button>
+    <button id="stepBackBtn" aria-label="Previous word">‹</button>
+    <button id="stepFwdBtn" aria-label="Next word">›</button>
+    <button id="jumpFwdBtn" aria-label="Forward ten words">»</button>
+  </div>
 
   <div class="hints">
     <kbd>Space</kbd> play / pause &nbsp; <kbd>←</kbd><kbd>→</kbd> word &nbsp; <kbd>Shift</kbd>+<kbd>←</kbd><kbd>→</kbd> jump 10 &nbsp; <kbd>↑</kbd><kbd>↓</kbd> speed &nbsp; <kbd>R</kbd> restart &nbsp; <kbd>Ctrl+V</kbd> paste &nbsp; · click or drag the progress bar to scrub · drop files anywhere
@@ -2498,6 +2539,53 @@ async function loadPdf(file) {
 $('toggleInput').addEventListener('click', () => {
   panel.classList.toggle('open');
 });
+
+// Source-panel text actions
+$('textCloseBtn').addEventListener('click', () => {
+  panel.classList.remove('open');
+});
+$('textSelectAllBtn').addEventListener('click', () => {
+  const ta = $('textInput');
+  ta.focus();
+  ta.select();
+});
+$('textPasteBtn').addEventListener('click', async () => {
+  const ta = $('textInput');
+  ta.focus();
+  const statusEl = $('status');
+  try {
+    if (!navigator.clipboard || !navigator.clipboard.readText) {
+      throw new Error('Clipboard API unavailable');
+    }
+    const text = await navigator.clipboard.readText();
+    if (!text) {
+      statusEl.textContent = 'Clipboard is empty';
+      return;
+    }
+    // Insert at the current cursor position, replacing any selection.
+    const start = ta.selectionStart ?? ta.value.length;
+    const end   = ta.selectionEnd ?? ta.value.length;
+    ta.value = ta.value.slice(0, start) + text + ta.value.slice(end);
+    ta.selectionStart = ta.selectionEnd = start + text.length;
+    ta.dispatchEvent(new Event('input', { bubbles: true }));
+    statusEl.classList.remove('err');
+    statusEl.textContent = `Pasted ${text.length} chars`;
+  } catch (e) {
+    statusEl.classList.add('err');
+    statusEl.textContent = 'Paste blocked — use Cmd/Ctrl-V instead';
+  }
+});
+
+// Mobile transport: same actions as the arrow-key handlers.
+function transportSeek(delta) {
+  if (!state.tokens.length) return;
+  Calibrator.invalidateNext();
+  seek(delta);
+}
+$('stepBackBtn').addEventListener('click', () => transportSeek(-1));
+$('stepFwdBtn').addEventListener('click',  () => transportSeek(1));
+$('jumpBackBtn').addEventListener('click', () => transportSeek(-10));
+$('jumpFwdBtn').addEventListener('click',  () => transportSeek(10));
 
 document.getElementById('saveFontBtn').addEventListener('click', () => {
   FontPicker.saveCurrentOffline();
