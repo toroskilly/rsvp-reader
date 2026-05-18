@@ -135,17 +135,14 @@
     position: relative;
     width: 100%;
     max-width: 720px;
-    height: 18px; /* generous hit area */
+    height: 18px;
     margin-bottom: 60px;
-    cursor: pointer;
     display: flex;
     align-items: center;
     user-select: none;
-    touch-action: none;
+    pointer-events: none; /* position display only; scrubbing happens on .shuttle */
   }
   .progress-track[aria-disabled="true"] {
-    cursor: not-allowed;
-    pointer-events: none;
     opacity: 0.6;
   }
   .progress-track::before {
@@ -441,6 +438,156 @@
     padding: 2px 8px;
     font-size: 9px;
     line-height: 1;
+  }
+
+  /* ----- Vertical WPM wheel (mobile only) ----- */
+  .wpm-wheel {
+    display: none;
+    position: relative;
+    width: 78px;
+    height: 168px;
+    border: 1px solid var(--rule);
+    background: var(--bg-2);
+    user-select: none;
+    touch-action: none;
+    cursor: ns-resize;
+    overflow: hidden;
+    border-radius: 4px;
+  }
+  /* Tick marks: thin horizontal lines repeating up the wheel, fading at top
+     and bottom so the wheel reads as continuous rather than fixed-range. */
+  .wpm-wheel-ticks {
+    position: absolute;
+    inset: 0;
+    background-image: repeating-linear-gradient(
+      to bottom,
+      var(--ink-faint) 0,
+      var(--ink-faint) 1px,
+      transparent 1px,
+      transparent 12px);
+    opacity: 0.35;
+    mask-image: linear-gradient(to bottom, transparent 0, #000 18%, #000 82%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 18%, #000 82%, transparent 100%);
+    pointer-events: none;
+  }
+  .wpm-wheel-readout {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    pointer-events: none;
+  }
+  .wpm-wheel-num {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: 32px;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+  }
+  .wpm-wheel-unit {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.3em;
+    color: var(--ink-dim);
+    text-transform: uppercase;
+  }
+  .wpm-wheel-hint {
+    position: absolute;
+    bottom: 6px;
+    left: 0; right: 0;
+    text-align: center;
+    font-family: var(--mono);
+    font-size: 8px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    pointer-events: none;
+    transition: opacity 120ms ease;
+  }
+  .wpm-wheel.dragging {
+    border-color: var(--accent);
+  }
+  .wpm-wheel.dragging .wpm-wheel-hint { opacity: 0; }
+  .wpm-wheel.dragging .wpm-wheel-num { color: var(--accent); }
+
+  /* ----- Velocity shuttle ----- */
+  .shuttle {
+    position: relative;
+    width: 100%;
+    max-width: 720px;
+    margin: 14px auto 0;
+    height: 28px;
+    border: 1px solid var(--rule);
+    background: var(--bg-2);
+    border-radius: 4px;
+    cursor: ew-resize;
+    user-select: none;
+    touch-action: none;
+    overflow: visible;
+  }
+  .shuttle-track {
+    position: absolute;
+    left: 8px; right: 8px;
+    top: 50%;
+    height: 1px;
+    background: var(--rule);
+    transform: translateY(-50%);
+    pointer-events: none;
+  }
+  .shuttle-center {
+    position: absolute;
+    left: 50%;
+    top: 4px;
+    bottom: 4px;
+    width: 2px;
+    background: var(--focus-color, var(--accent));
+    opacity: 0.55;
+    transform: translateX(-50%);
+    pointer-events: none;
+  }
+  .shuttle-thumb {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--ink);
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    transition: opacity 120ms ease;
+    pointer-events: none;
+  }
+  .shuttle.active {
+    border-color: var(--accent);
+  }
+  .shuttle.active .shuttle-thumb {
+    opacity: 1;
+    background: var(--accent);
+  }
+  .shuttle-label {
+    position: absolute;
+    top: -22px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    opacity: 0;
+    white-space: nowrap;
+    pointer-events: none;
+    transition: opacity 120ms ease;
+  }
+  .shuttle.active .shuttle-label { opacity: 1; }
+  .shuttle[aria-disabled="true"] {
+    opacity: 0.4;
+    pointer-events: none;
   }
 
   /* input panel */
@@ -1222,6 +1369,11 @@
        transport buttons so step/jump are still reachable. */
     .hints { display: none; }
     .mobile-transport { display: flex; }
+
+    /* Swap the +/− stepper for the vertical drag wheel on touch widths. */
+    .wpm-display, .stepper { display: none; }
+    .wpm-wheel { display: block; }
+    .control-group.right { justify-content: center; }
   }
 
   /* Very narrow phones (iPhone SE class, ~360 px) */
@@ -1254,7 +1406,8 @@
   </header>
 
   <main class="stage">
-    <div class="progress-track" id="progTrack" aria-disabled="true" role="slider" aria-label="Reading position" tabindex="0">
+    <!-- Position indicator only — scrubbing has moved to the velocity shuttle below the controls. -->
+    <div class="progress-track" id="progTrack" aria-label="Reading position" aria-live="off">
       <div class="progress-label" id="progLabel">0 / 0 · 00:00</div>
       <div class="progress-fill" id="progFill"></div>
       <div class="progress-handle" id="progHandle"></div>
@@ -1319,8 +1472,24 @@
         <button id="wpmUp">+</button>
         <button id="wpmDn">−</button>
       </div>
+      <!-- Touch-only WPM wheel: hidden on desktop. -->
+      <div class="wpm-wheel" id="wpmWheel" role="slider" aria-label="Speed in words per minute" tabindex="0">
+        <div class="wpm-wheel-ticks" aria-hidden="true"></div>
+        <div class="wpm-wheel-readout">
+          <span class="wpm-wheel-num" id="wpmWheelNum">400</span>
+          <span class="wpm-wheel-unit">wpm</span>
+        </div>
+        <div class="wpm-wheel-hint" aria-hidden="true">drag</div>
+      </div>
     </div>
   </section>
+
+  <div class="shuttle" id="shuttle" role="slider" aria-disabled="true" aria-label="Velocity shuttle: drag right to scrub forward, left to reverse">
+    <div class="shuttle-track" aria-hidden="true"></div>
+    <div class="shuttle-center" aria-hidden="true"></div>
+    <div class="shuttle-thumb" id="shuttleThumb" aria-hidden="true"></div>
+    <div class="shuttle-label" id="shuttleLabel" aria-hidden="true"></div>
+  </div>
 
   <div class="mobile-transport" role="group" aria-label="Transport (mobile)">
     <button id="jumpBackBtn" aria-label="Back ten words">«</button>
@@ -2416,70 +2585,153 @@ function seek(delta) {
   savePosition();
 }
 
-function seekTo(idx) {
-  if (state.tokens.length === 0) return;
-  state.idx = Math.max(0, Math.min(state.tokens.length - 1, idx));
-  renderWord();
-  renderProgress();
-  savePosition();
-}
+// ---------- Velocity shuttle ----------
+// A thin horizontal strip: centre = no scrubbing, right of centre scrubs
+// forward, left scrubs back. Distance from centre maps linearly to a
+// multiplier of the user's current WPM, capped at SHUTTLE_MAX_MULT. On
+// release, playback returns to whatever state it was in before the press
+// (playing or paused).
+(function setupShuttle() {
+  const shuttle      = $('shuttle');
+  const thumb        = $('shuttleThumb');
+  const label        = $('shuttleLabel');
+  const SHUTTLE_MAX_MULT = 8;
+  const DEADZONE     = 0.05;  // ±5% around centre → no motion
+  let active         = false;
+  let wasPlaying     = false;
+  let rafId          = null;
+  let lastT          = 0;
+  let velocityWpm    = 0;
+  let accWords       = 0;     // fractional words accumulated between ticks
 
-// ---------- Progress bar scrubbing ----------
-(function setupScrub() {
-  let scrubbing = false;
-  let wasPlaying = false;
-
-  function idxFromEvent(e) {
-    const rect = progTrack.getBoundingClientRect();
-    const x = (e.clientX ?? 0) - rect.left;
-    const pct = Math.max(0, Math.min(1, x / rect.width));
-    const total = state.tokens.length;
-    if (total === 0) return 0;
-    // Map 0..1 → 0..total-1 so the right edge lands exactly on the last word
-    return Math.round(pct * (total - 1));
+  function fractionFromEvent(e) {
+    const rect = shuttle.getBoundingClientRect();
+    let f = ((e.clientX ?? 0) - rect.left) / rect.width;
+    return Math.max(0, Math.min(1, f));
   }
 
-  progTrack.addEventListener('pointerdown', e => {
+  function applyFraction(f) {
+    let offset = (f - 0.5) * 2;             // -1..+1
+    let sign   = Math.sign(offset);
+    let mag    = Math.abs(offset);
+    if (mag < DEADZONE) {
+      mag = 0;
+    } else {
+      mag = (mag - DEADZONE) / (1 - DEADZONE);  // 0..1 after deadzone
+    }
+    const mult = mag * SHUTTLE_MAX_MULT;
+    velocityWpm = sign * mult * state.wpm;
+    thumb.style.left = (f * 100) + '%';
+    if (mult === 0) {
+      label.textContent = '';
+    } else {
+      label.textContent = (sign < 0 ? '◀ ' : '') + mult.toFixed(1) + '×' + (sign > 0 ? ' ▶' : '');
+    }
+  }
+
+  function frame(t) {
+    if (!active) return;
+    if (!lastT) lastT = t;
+    const dt = (t - lastT) / 1000;          // seconds since last frame
+    lastT = t;
+    const wordsThisFrame = (velocityWpm / 60) * dt;
+    accWords += wordsThisFrame;
+    if (Math.abs(accWords) >= 1) {
+      const delta = Math.trunc(accWords);
+      accWords  -= delta;
+      seek(delta);
+    }
+    rafId = requestAnimationFrame(frame);
+  }
+
+  shuttle.addEventListener('pointerdown', e => {
     if (state.tokens.length === 0) return;
-    e.preventDefault();
-    scrubbing = true;
+    active = true;
     wasPlaying = state.playing;
     if (wasPlaying) pause();
-    progTrack.classList.add('scrubbing');
-    progTrack.setPointerCapture(e.pointerId);
-    seekTo(idxFromEvent(e));
+    shuttle.classList.add('active');
+    try { shuttle.setPointerCapture(e.pointerId); } catch (_) {}
+    Calibrator.invalidateNext();
+    applyFraction(fractionFromEvent(e));
+    lastT = 0;
+    accWords = 0;
+    rafId = requestAnimationFrame(frame);
+    e.preventDefault();
   });
 
-  progTrack.addEventListener('pointermove', e => {
-    if (!scrubbing) return;
-    seekTo(idxFromEvent(e));
+  shuttle.addEventListener('pointermove', e => {
+    if (!active) return;
+    applyFraction(fractionFromEvent(e));
   });
 
-  function endScrub(e) {
-    if (!scrubbing) return;
-    scrubbing = false;
-    progTrack.classList.remove('scrubbing');
-    try { progTrack.releasePointerCapture(e.pointerId); } catch (_) {}
+  function endShuttle(e) {
+    if (!active) return;
+    active = false;
+    shuttle.classList.remove('active');
+    try { shuttle.releasePointerCapture(e.pointerId); } catch (_) {}
+    if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+    velocityWpm = 0;
+    accWords    = 0;
+    lastT       = 0;
+    thumb.style.left = '50%';
+    label.textContent = '';
+    // Restore the pre-shuttle playback state: was playing -> resume;
+    // was paused -> stay paused. (User requirement.)
     if (wasPlaying) play();
     wasPlaying = false;
   }
-  progTrack.addEventListener('pointerup', endScrub);
-  progTrack.addEventListener('pointercancel', endScrub);
+  shuttle.addEventListener('pointerup', endShuttle);
+  shuttle.addEventListener('pointercancel', endShuttle);
+})();
 
-  // keyboard support when the track is focused
-  progTrack.addEventListener('keydown', e => {
-    if (state.tokens.length === 0) return;
-    const step = e.shiftKey ? 25 : 1;
-    if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') { e.preventDefault(); seek(-step); }
-    else if (e.key === 'ArrowRight' || e.key === 'ArrowUp') { e.preventDefault(); seek(step); }
-    else if (e.key === 'Home') { e.preventDefault(); seekTo(0); }
-    else if (e.key === 'End') { e.preventDefault(); seekTo(state.tokens.length - 1); }
+// Keep .shuttle aria-disabled in sync with whether a text is loaded.
+function syncShuttleEnabled() {
+  const sh = document.getElementById('shuttle');
+  if (!sh) return;
+  sh.setAttribute('aria-disabled', state.tokens.length === 0 ? 'true' : 'false');
+}
+
+// ---------- Vertical WPM wheel (mobile only) ----------
+// Hidden on desktop via CSS. Drag up to increase WPM, down to decrease,
+// 1 wpm per pixel of vertical drag, no momentum. Rounds to the nearest 5.
+(function setupWpmWheel() {
+  const wheel = $('wpmWheel');
+  if (!wheel) return;
+  const SENSITIVITY = 1.0;  // wpm per pixel
+  const STEP = 5;
+  let dragging = false;
+  let startY = 0;
+  let startWpm = 0;
+
+  wheel.addEventListener('pointerdown', e => {
+    dragging = true;
+    startY = e.clientY;
+    startWpm = state.wpm;
+    wheel.classList.add('dragging');
+    try { wheel.setPointerCapture(e.pointerId); } catch (_) {}
+    e.preventDefault();
   });
+  wheel.addEventListener('pointermove', e => {
+    if (!dragging) return;
+    const dy = startY - e.clientY;  // dragging up is positive
+    const target = startWpm + dy * SENSITIVITY;
+    setWpm(Math.round(target / STEP) * STEP);
+  });
+  function endDrag(e) {
+    if (!dragging) return;
+    dragging = false;
+    wheel.classList.remove('dragging');
+    try { wheel.releasePointerCapture(e.pointerId); } catch (_) {}
+  }
+  wheel.addEventListener('pointerup', endDrag);
+  wheel.addEventListener('pointercancel', endDrag);
 })();
 
 function setWpm(v) {
   state.wpm = Math.max(100, Math.min(1200, v));
   wpmNum.textContent = state.wpm;
+  const wheelNum = document.getElementById('wpmWheelNum');
+  if (wheelNum) wheelNum.textContent = state.wpm;
   renderProgress();
   Store.save({ wpm: state.wpm });
 }
@@ -2492,6 +2744,7 @@ function loadText(raw) {
   const hasContent = state.tokens.length > 0;
   playBtn.disabled = !hasContent;
   $('restartBtn').disabled = !hasContent;
+  syncShuttleEnabled();
   if (hasContent) {
     renderWord();
   } else {
