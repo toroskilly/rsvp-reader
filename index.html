@@ -10,21 +10,21 @@
   /* OpenDyslexic — self-hosted, SIL OFL 1.1. See /fonts/opendyslexic/OFL.txt */
   @font-face {
     font-family: 'OpenDyslexic';
-    src: url('fonts/opendyslexic/OpenDyslexic-Regular.woff2') format('woff2');
+    src: url('fonts/opendyslexic/OpenDyslexic3-Regular.woff2') format('woff2');
     font-weight: 400;
     font-style: normal;
     font-display: swap;
   }
   @font-face {
     font-family: 'OpenDyslexic';
-    src: url('fonts/opendyslexic/OpenDyslexic-Bold.woff2') format('woff2');
+    src: url('fonts/opendyslexic/OpenDyslexic3-Bold.woff2') format('woff2');
     font-weight: 700;
     font-style: normal;
     font-display: swap;
   }
   @font-face {
     font-family: 'OpenDyslexic Bold';
-    src: url('fonts/opendyslexic/OpenDyslexic-Bold.woff2') format('woff2');
+    src: url('fonts/opendyslexic/OpenDyslexic3-Bold.woff2') format('woff2');
     font-weight: 400;
     font-style: normal;
     font-display: swap;
@@ -1648,8 +1648,8 @@ const persisted = Store.load();
 const FONTS = [
   { name: 'Atkinson Hyperlegible', stack: "'Atkinson Hyperlegible', sans-serif", weights: [400, 700], friendly: true, badge: 'Top pick',  source: 'google', why: 'Built by the Braille Institute to maximize character distinction.' },
   { name: 'Lexend',                stack: "'Lexend', sans-serif",                weights: [400, 500, 700], friendly: true, badge: 'Research-backed', source: 'google', why: 'Designed around reading-proficiency research.' },
-  { name: 'OpenDyslexic',          stack: "'OpenDyslexic', sans-serif",          weights: [400], friendly: true, badge: 'Standard',  source: 'opendyslexic', file: 'fonts/opendyslexic/OpenDyslexic-Regular.woff2', why: 'Bottom-weighted letterforms anchor letters and prevent flipping.' },
-  { name: 'OpenDyslexic Bold',     stack: "'OpenDyslexic Bold', sans-serif",     weights: [400], friendly: true, badge: 'Bold',      source: 'opendyslexic', file: 'fonts/opendyslexic/OpenDyslexic-Bold.woff2', why: 'Same letterforms as Standard, with heavier weight for extra anchoring.' },
+  { name: 'OpenDyslexic',          stack: "'OpenDyslexic', sans-serif",          weights: [400], friendly: true, badge: 'Standard',  source: 'opendyslexic', file: 'fonts/opendyslexic/OpenDyslexic3-Regular.woff2', why: 'Bottom-weighted letterforms anchor letters and prevent flipping.' },
+  { name: 'OpenDyslexic Bold',     stack: "'OpenDyslexic Bold', sans-serif",     weights: [400], friendly: true, badge: 'Bold',      source: 'opendyslexic', file: 'fonts/opendyslexic/OpenDyslexic3-Bold.woff2', why: 'Same letterforms as Standard, with heavier weight for extra anchoring.' },
   { name: 'Andika',                stack: "'Andika', sans-serif",                weights: [400, 700], friendly: true, badge: 'Reading-friendly', source: 'google', why: 'Designed for new readers; unambiguous letterforms.' },
   { name: 'Comic Neue',            stack: "'Comic Neue', sans-serif",            weights: [400, 700], friendly: true, badge: 'Underrated', source: 'google', why: 'Refined Comic Sans. Helps some ADHD/dyslexic readers.' },
   { name: 'Fraunces',              stack: "'Fraunces', serif",                   weights: [400, 600], source: 'google', why: 'Characterful serif. Default display font.' },

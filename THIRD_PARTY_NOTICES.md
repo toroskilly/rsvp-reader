@@ -20,8 +20,9 @@ notices and licences are reproduced below in compliance with each licence.
   (https://abbiecod.es | support@abbiecod.es), with Reserved Font Name
   "OpenDyslexic". Copyright (c) 12/2012 - 2019.
 - **Licence:** SIL Open Font License, Version 1.1
-- **Files:** `fonts/opendyslexic/OpenDyslexic-Regular.woff2`,
-  `fonts/opendyslexic/OpenDyslexic-Bold.woff2`
+- **Files:** `fonts/opendyslexic/OpenDyslexic3-Regular.woff2`,
+  `fonts/opendyslexic/OpenDyslexic3-Bold.woff2` (the OpenDyslexic3
+  variant published at opendyslexic.org)
 - **Licence text:** `fonts/opendyslexic/OFL.txt`
 - **Fontlog:** `fonts/opendyslexic/FONTLOG.txt`
 - **Upstream:** https://github.com/antijingoist/opendyslexic
