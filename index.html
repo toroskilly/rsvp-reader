@@ -333,6 +333,12 @@
   .context-line .ctx-focus-plain {
     color: var(--ink);
   }
+  /* When the whole-word context highlight is on, every part of .now —
+     including the otherwise-plain focus letter — takes the focus colour. */
+  .context-line .now.now-whole-focus,
+  .context-line .now.now-whole-focus .ctx-focus-plain {
+    color: var(--focus-color, var(--accent));
+  }
 
   /* controls */
   .controls {
@@ -1326,6 +1332,13 @@
           </div>
           <div class="setting-row indent">
             <label class="switch small">
+              <input type="checkbox" id="focusInContextWholeToggle">
+              <span class="switch-track"></span>
+              <span class="switch-label">Also colour the whole current word in the context strip</span>
+            </label>
+          </div>
+          <div class="setting-row indent">
+            <label class="switch small">
               <input type="checkbox" id="focusFlashToggle">
               <span class="switch-track"></span>
               <span class="switch-label">Flash brighter on word change</span>
@@ -1445,7 +1458,7 @@
           <h3>Focus letter highlight</h3>
           <p>Colouring the focus letter trains your eye to fixate on it. After a few minutes the colour fades from conscious notice but the anchoring effect persists. Turn it off if you find it distracting, but for most readers it makes a meaningful difference. The colour picker is yours — pick something gentle if you read for a long time, or something bold if you want a strong focal cue.</p>
           <h3>Highlight in context strip</h3>
-          <p>The small line below the flashing word shows previous · current · next, anchored to the same focus letter. Highlighting the focus letter there too keeps a visual through-line — useful if you frequently glance down to confirm what you just read. Off by default to avoid two competing focal points.</p>
+          <p>The small line below the flashing word shows previous · current · next, anchored to the same focus letter. Highlighting the focus letter there too keeps a visual through-line — useful if you frequently glance down to confirm what you just read. Off by default to avoid two competing focal points. A second toggle colours the entire current word in the context strip, which can help if you find a single coloured letter too subtle.</p>
           <h3>Flash on word change</h3>
           <p>An optional brief brightening and scale-pulse on the focus letter every time a new word arrives. It costs almost nothing in attention and helps the eye "click" onto each new word, particularly at high speeds where words blur together. Intensity 40&nbsp;% and duration 80&nbsp;ms is a good starting point; lower for subtlety, higher if you feel words slipping past you.</p>
         </article>
@@ -1626,7 +1639,8 @@ const Prefs = (() => {
     isiMs:          typeof saved.isiMs === 'number' ? saved.isiMs : 40,
     focusEnabled:     saved.focusEnabled !== false,                // default ON
     focusColor:       saved.focusColor || DEFAULT_FOCUS_COLOR,
-    focusInContext:   saved.focusInContext === true,                // default OFF
+    focusInContext:        saved.focusInContext === true,           // default OFF
+    focusInContextWhole:   saved.focusInContextWhole === true,      // default OFF
     focusFlash:       saved.focusFlash === true,                   // default OFF
     focusFlashIntensity: typeof saved.focusFlashIntensity === 'number' ? saved.focusFlashIntensity : 40,
     focusFlashDurationMs: typeof saved.focusFlashDurationMs === 'number' ? saved.focusFlashDurationMs : 80,
@@ -2060,6 +2074,12 @@ const SettingsUI = {
       Prefs.save({ focusInContext: focusCx.checked });
       if (state.tokens.length > 0) renderWord();
     });
+    const focusCxW = document.getElementById('focusInContextWholeToggle');
+    focusCxW.checked = Prefs.focusInContextWhole;
+    focusCxW.addEventListener('change', () => {
+      Prefs.save({ focusInContextWhole: focusCxW.checked });
+      if (state.tokens.length > 0) renderWord();
+    });
     focusFT.addEventListener('change', () => {
       Prefs.save({ focusFlash: focusFT.checked });
       syncFocusFlashRows();
@@ -2178,7 +2198,8 @@ function renderWord() {
   // Always render the focus letter span (even when highlighting is off) so we can
   // measure its position. The .ctx-focus class only colours when enabled.
   const nowFocusClass = (Prefs.focusEnabled && Prefs.focusInContext) ? 'ctx-focus' : 'ctx-focus ctx-focus-plain';
-  const nowHtml = `<span class="now"><span class="ctx-pre">${escapeHtml(pre)}</span><span class="${nowFocusClass}">${escapeHtml(focusChar)}</span><span class="ctx-post">${escapeHtml(post)}</span></span>`;
+  const nowClass = (Prefs.focusEnabled && Prefs.focusInContextWhole) ? 'now now-whole-focus' : 'now';
+  const nowHtml = `<span class="${nowClass}"><span class="ctx-pre">${escapeHtml(pre)}</span><span class="${nowFocusClass}">${escapeHtml(focusChar)}</span><span class="ctx-post">${escapeHtml(post)}</span></span>`;
   contextEl.innerHTML = `<div class="context-line">${escapeHtml(prev)} ${nowHtml} ${escapeHtml(next)}</div>`;
 
   // Shift the inner line horizontally so the focus letter lands on the strip centre.
