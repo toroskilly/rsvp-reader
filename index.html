@@ -208,7 +208,7 @@
     justify-content: center;
   }
 
-  /* center marker lines — match the ORP highlight colour since they
+  /* center marker lines — match the Focus letter highlight colour since they
      visually frame the focal letter, not the UI chrome */
   .word-frame::before, .word-frame::after {
     content: '';
@@ -216,7 +216,7 @@
     left: 50%;
     width: 1px;
     height: 18px;
-    background: var(--orp-color, var(--accent));
+    background: var(--focus-color, var(--accent));
     opacity: 0.5;
   }
   .word-frame::before { top: 18px; }
@@ -237,15 +237,15 @@
   .word .pre, .word .post {
     color: var(--ink);
   }
-  .word .orp {
-    color: var(--orp-color, var(--accent));
+  .word .focus-letter {
+    color: var(--focus-color, var(--accent));
     position: relative;
   }
-  .word.no-orp .orp {
+  .word.no-focus-letter .focus-letter {
     color: var(--ink);
   }
 
-  @keyframes orpFlash {
+  @keyframes focusFlash {
     0% {
       filter: brightness(calc(1 + var(--flash-intensity, 0.4)));
       transform: scale(calc(1 + var(--flash-intensity, 0.4) * 0.06));
@@ -255,8 +255,8 @@
       transform: scale(1);
     }
   }
-  .word .orp.flash {
-    animation: orpFlash var(--flash-dur, 80ms) ease-out 1;
+  .word .focus-letter.flash {
+    animation: focusFlash var(--flash-dur, 80ms) ease-out 1;
     display: inline-block;
     transform-origin: center;
   }
@@ -313,7 +313,7 @@
     font-style: italic;
     line-height: 1.5;
     white-space: nowrap;
-    /* Inner line is centred, then nudged horizontally by JS so the ORP
+    /* Inner line is centred, then nudged horizontally by JS so the focus letter
        letter of the current word sits exactly on the rail centre. */
     display: inline-block;
     position: absolute;
@@ -327,10 +327,10 @@
     font-style: normal;
     padding: 0 6px;
   }
-  .context-line .ctx-orp {
-    color: var(--orp-color, var(--accent));
+  .context-line .ctx-focus {
+    color: var(--focus-color, var(--accent));
   }
-  .context-line .ctx-orp-plain {
+  .context-line .ctx-focus-plain {
     color: var(--ink);
   }
 
@@ -1295,51 +1295,51 @@
     <details class="settings-group" id="grpDisplay">
       <summary>
         <span class="group-title">Display</span>
-        <span class="group-subtitle">— font, ORP highlight, colour</span>
+        <span class="group-subtitle">— font, Focus letter highlight, colour</span>
       </summary>
       <div class="group-body">
 
-        <!-- ORP highlight -->
+        <!-- Focus letter highlight -->
         <div class="setting-block">
           <div class="setting-head">
-            <h3>Optimal Recognition Point (ORP) highlight</h3>
+            <h3>Focus letter highlight</h3>
             <p class="setting-desc">Highlights the focal letter of each word so your eye stays anchored to a single point. Turn off if you find it distracting.</p>
           </div>
           <div class="setting-row">
             <label class="switch">
-              <input type="checkbox" id="orpToggle" checked>
+              <input type="checkbox" id="focusToggle" checked>
               <span class="switch-track"></span>
-              <span class="switch-label">Show ORP highlight</span>
+              <span class="switch-label">Show focus letter highlight</span>
             </label>
           </div>
           <div class="setting-row indent">
-            <label class="slider-label" for="orpColor">Highlight colour</label>
-            <input type="color" id="orpColor" value="#d94a1f">
-            <button id="orpColorReset" class="mini-btn">Reset</button>
+            <label class="slider-label" for="focusColor">Highlight colour</label>
+            <input type="color" id="focusColor" value="#d94a1f">
+            <button id="focusColorReset" class="mini-btn">Reset</button>
           </div>
           <div class="setting-row indent">
             <label class="switch small">
-              <input type="checkbox" id="orpInContextToggle">
+              <input type="checkbox" id="focusInContextToggle">
               <span class="switch-track"></span>
-              <span class="switch-label">Also highlight ORP in the context strip below the word</span>
+              <span class="switch-label">Also highlight the focus letter in the context strip below the word</span>
             </label>
           </div>
           <div class="setting-row indent">
             <label class="switch small">
-              <input type="checkbox" id="orpFlashToggle">
+              <input type="checkbox" id="focusFlashToggle">
               <span class="switch-track"></span>
               <span class="switch-label">Flash brighter on word change</span>
             </label>
           </div>
-          <div class="setting-row indent deeper" id="orpFlashRow">
-            <label class="slider-label" for="orpFlashIntensity">Flash intensity</label>
-            <input type="range" id="orpFlashIntensity" min="0" max="100" step="5" value="40">
-            <span class="slider-value" id="orpFlashIntensityValue">40 %</span>
+          <div class="setting-row indent deeper" id="focusFlashRow">
+            <label class="slider-label" for="focusFlashIntensity">Flash intensity</label>
+            <input type="range" id="focusFlashIntensity" min="0" max="100" step="5" value="40">
+            <span class="slider-value" id="focusFlashIntensityValue">40 %</span>
           </div>
-          <div class="setting-row indent deeper" id="orpFlashDurationRow">
-            <label class="slider-label" for="orpFlashDuration">Flash duration</label>
-            <input type="range" id="orpFlashDuration" min="20" max="200" step="10" value="80">
-            <span class="slider-value" id="orpFlashDurationValue">80 ms</span>
+          <div class="setting-row indent deeper" id="focusFlashDurationRow">
+            <label class="slider-label" for="focusFlashDuration">Flash duration</label>
+            <input type="range" id="focusFlashDuration" min="20" max="200" step="10" value="80">
+            <span class="slider-value" id="focusFlashDurationValue">80 ms</span>
           </div>
         </div>
 
@@ -1347,13 +1347,13 @@
         <div class="setting-block">
           <div class="setting-head">
             <h3>Interface accent colour</h3>
-            <p class="setting-desc">The colour used for the play button, progress bar, settings markers, and other interactive accents. Independent from the ORP highlight above, so you can pair (for example) a soft pastel ORP with a punchier UI accent.</p>
+            <p class="setting-desc">The colour used for the play button, progress bar, settings markers, and other interactive accents. Independent from the Focus letter highlight above, so you can pair (for example) a soft pastel focus letter with a punchier UI accent.</p>
           </div>
           <div class="setting-row">
             <label class="slider-label" for="uiAccentColor">Accent colour</label>
             <input type="color" id="uiAccentColor" value="#d94a1f">
             <button id="uiAccentReset" class="mini-btn">Reset</button>
-            <button id="uiAccentMatchOrp" class="mini-btn">Match ORP</button>
+            <button id="uiAccentMatchFocus" class="mini-btn">Match focus letter</button>
           </div>
         </div>
 
@@ -1386,7 +1386,7 @@
         <div class="setting-block">
           <div class="setting-head">
             <h3>Saved settings</h3>
-            <p class="setting-desc">Your WPM, font choice, ORP preferences, last text, and reading position save to this browser automatically (works when the file is opened locally).</p>
+            <p class="setting-desc">Your WPM, font choice, Focus letter preferences, last text, and reading position save to this browser automatically (works when the file is opened locally).</p>
           </div>
           <div class="setting-row">
             <button id="clearStorageBtn">Clear all saved settings</button>
@@ -1441,13 +1441,13 @@
 
         <article class="guide-section">
           <h2>How your eye finds the word</h2>
-          <p>For each word, there is a single letter your brain processes first — the <em>Optimal Recognition Point</em>, or ORP. It is not the centre of the word. For a five-letter word it's the third letter; for ten-letter words, the fourth. RSVP readers exploit this by positioning every word so its ORP letter lands on the same pixel, so your eye never has to relocate even slightly. Some implementations call this the Optimal Viewing Position; the principle is the same.</p>
-          <h3>ORP highlight</h3>
-          <p>Colouring the ORP letter trains your eye to fixate on it. After a few minutes the colour fades from conscious notice but the anchoring effect persists. Turn it off if you find it distracting, but for most readers it makes a meaningful difference. The colour picker is yours — pick something gentle if you read for a long time, or something bold if you want a strong focal cue.</p>
+          <p>For each word, there is a single letter your brain processes first — the <em>focus letter</em>. It is not the centre of the word. For a five-letter word it's the third letter; for ten-letter words, the fourth. RSVP readers exploit this by positioning every word so its focus letter lands on the same pixel, so your eye never has to relocate even slightly. Some implementations call this the Optimal Viewing Position; the principle is the same.</p>
+          <h3>Focus letter highlight</h3>
+          <p>Colouring the focus letter trains your eye to fixate on it. After a few minutes the colour fades from conscious notice but the anchoring effect persists. Turn it off if you find it distracting, but for most readers it makes a meaningful difference. The colour picker is yours — pick something gentle if you read for a long time, or something bold if you want a strong focal cue.</p>
           <h3>Highlight in context strip</h3>
-          <p>The small line below the flashing word shows previous · current · next, anchored to the same ORP point. Highlighting the ORP letter there too keeps a visual through-line — useful if you frequently glance down to confirm what you just read. Off by default to avoid two competing focal points.</p>
+          <p>The small line below the flashing word shows previous · current · next, anchored to the same focus letter. Highlighting the focus letter there too keeps a visual through-line — useful if you frequently glance down to confirm what you just read. Off by default to avoid two competing focal points.</p>
           <h3>Flash on word change</h3>
-          <p>An optional brief brightening and scale-pulse on the ORP letter every time a new word arrives. It costs almost nothing in attention and helps the eye "click" onto each new word, particularly at high speeds where words blur together. Intensity 40&nbsp;% and duration 80&nbsp;ms is a good starting point; lower for subtlety, higher if you feel words slipping past you.</p>
+          <p>An optional brief brightening and scale-pulse on the focus letter every time a new word arrives. It costs almost nothing in attention and helps the eye "click" onto each new word, particularly at high speeds where words blur together. Intensity 40&nbsp;% and duration 80&nbsp;ms is a good starting point; lower for subtlety, higher if you feel words slipping past you.</p>
         </article>
 
         <article class="guide-section">
@@ -1528,8 +1528,8 @@
 })();
 </script>
 <script>
-// ---------- ORP (Optimal Recognition Point) ----------
-function orpIndex(word) {
+// ---------- Focus letter ----------
+function focusIndex(word) {
   const n = word.length;
   if (n <= 1) return 0;
   if (n <= 4) return 1;
@@ -1618,20 +1618,20 @@ const Store = (() => {
 // All defaults chosen to match the prior behaviour so existing users see no change.
 const Prefs = (() => {
   const saved = Store.load();
-  const DEFAULT_ORP_COLOR = '#d94a1f';
+  const DEFAULT_FOCUS_COLOR = '#d94a1f';
   const DEFAULT_UI_ACCENT = '#d94a1f';
   return {
     variableTiming: saved.variableTiming !== false,           // default ON
     isiEnabled:     saved.isiEnabled === true,                 // default OFF (matches original)
     isiMs:          typeof saved.isiMs === 'number' ? saved.isiMs : 40,
-    orpEnabled:     saved.orpEnabled !== false,                // default ON
-    orpColor:       saved.orpColor || DEFAULT_ORP_COLOR,
-    orpInContext:   saved.orpInContext === true,                // default OFF
-    orpFlash:       saved.orpFlash === true,                   // default OFF
-    orpFlashIntensity: typeof saved.orpFlashIntensity === 'number' ? saved.orpFlashIntensity : 40,
-    orpFlashDurationMs: typeof saved.orpFlashDurationMs === 'number' ? saved.orpFlashDurationMs : 80,
+    focusEnabled:     saved.focusEnabled !== false,                // default ON
+    focusColor:       saved.focusColor || DEFAULT_FOCUS_COLOR,
+    focusInContext:   saved.focusInContext === true,                // default OFF
+    focusFlash:       saved.focusFlash === true,                   // default OFF
+    focusFlashIntensity: typeof saved.focusFlashIntensity === 'number' ? saved.focusFlashIntensity : 40,
+    focusFlashDurationMs: typeof saved.focusFlashDurationMs === 'number' ? saved.focusFlashDurationMs : 80,
     uiAccent:       saved.uiAccent || DEFAULT_UI_ACCENT,
-    DEFAULT_ORP_COLOR,
+    DEFAULT_FOCUS_COLOR,
     DEFAULT_UI_ACCENT,
     save(patch) {
       Object.assign(this, patch);
@@ -1982,7 +1982,7 @@ const SettingsUI = {
 
   // Pushes persisted Prefs onto :root so CSS picks them up immediately.
   applyToRoot() {
-    document.documentElement.style.setProperty('--orp-color', Prefs.orpColor);
+    document.documentElement.style.setProperty('--focus-color', Prefs.focusColor);
     document.documentElement.style.setProperty('--accent', Prefs.uiAccent);
   },
 
@@ -2014,65 +2014,65 @@ const SettingsUI = {
       Prefs.save({ isiMs: v });
     });
 
-    // ORP highlight
-    const orpT = document.getElementById('orpToggle');
-    const orpC = document.getElementById('orpColor');
-    const orpFT = document.getElementById('orpFlashToggle');
-    const orpFI = document.getElementById('orpFlashIntensity');
-    const orpFIv = document.getElementById('orpFlashIntensityValue');
-    const orpFD = document.getElementById('orpFlashDuration');
-    const orpFDv = document.getElementById('orpFlashDurationValue');
-    const orpFR = document.getElementById('orpFlashRow');
-    const orpFDR = document.getElementById('orpFlashDurationRow');
+    // Focus letter highlight
+    const focusT = document.getElementById('focusToggle');
+    const focusC = document.getElementById('focusColor');
+    const focusFT = document.getElementById('focusFlashToggle');
+    const focusFI = document.getElementById('focusFlashIntensity');
+    const focusFIv = document.getElementById('focusFlashIntensityValue');
+    const focusFD = document.getElementById('focusFlashDuration');
+    const focusFDv = document.getElementById('focusFlashDurationValue');
+    const focusFR = document.getElementById('focusFlashRow');
+    const focusFDR = document.getElementById('focusFlashDurationRow');
 
-    const syncOrpFlashRows = () => {
-      const enabled = orpT.checked && orpFT.checked;
-      orpFR.style.opacity = enabled ? '1' : '0.4';
-      orpFDR.style.opacity = enabled ? '1' : '0.4';
+    const syncFocusFlashRows = () => {
+      const enabled = focusT.checked && focusFT.checked;
+      focusFR.style.opacity = enabled ? '1' : '0.4';
+      focusFDR.style.opacity = enabled ? '1' : '0.4';
     };
 
-    orpT.checked = Prefs.orpEnabled;
-    orpC.value = Prefs.orpColor;
-    const orpCx = document.getElementById('orpInContextToggle');
-    orpCx.checked = Prefs.orpInContext;
-    orpFT.checked = Prefs.orpFlash;
-    orpFI.value = Prefs.orpFlashIntensity;
-    orpFIv.textContent = `${Prefs.orpFlashIntensity} %`;
-    orpFD.value = Prefs.orpFlashDurationMs;
-    orpFDv.textContent = `${Prefs.orpFlashDurationMs} ms`;
-    syncOrpFlashRows();
+    focusT.checked = Prefs.focusEnabled;
+    focusC.value = Prefs.focusColor;
+    const focusCx = document.getElementById('focusInContextToggle');
+    focusCx.checked = Prefs.focusInContext;
+    focusFT.checked = Prefs.focusFlash;
+    focusFI.value = Prefs.focusFlashIntensity;
+    focusFIv.textContent = `${Prefs.focusFlashIntensity} %`;
+    focusFD.value = Prefs.focusFlashDurationMs;
+    focusFDv.textContent = `${Prefs.focusFlashDurationMs} ms`;
+    syncFocusFlashRows();
 
-    orpT.addEventListener('change', () => {
-      Prefs.save({ orpEnabled: orpT.checked });
-      syncOrpFlashRows();
+    focusT.addEventListener('change', () => {
+      Prefs.save({ focusEnabled: focusT.checked });
+      syncFocusFlashRows();
       if (state.tokens.length > 0) renderWord();
     });
-    orpC.addEventListener('input', () => {
-      Prefs.save({ orpColor: orpC.value });
+    focusC.addEventListener('input', () => {
+      Prefs.save({ focusColor: focusC.value });
       this.applyToRoot();
     });
-    document.getElementById('orpColorReset').addEventListener('click', () => {
-      orpC.value = Prefs.DEFAULT_ORP_COLOR;
-      Prefs.save({ orpColor: Prefs.DEFAULT_ORP_COLOR });
+    document.getElementById('focusColorReset').addEventListener('click', () => {
+      focusC.value = Prefs.DEFAULT_FOCUS_COLOR;
+      Prefs.save({ focusColor: Prefs.DEFAULT_FOCUS_COLOR });
       this.applyToRoot();
     });
-    orpCx.addEventListener('change', () => {
-      Prefs.save({ orpInContext: orpCx.checked });
+    focusCx.addEventListener('change', () => {
+      Prefs.save({ focusInContext: focusCx.checked });
       if (state.tokens.length > 0) renderWord();
     });
-    orpFT.addEventListener('change', () => {
-      Prefs.save({ orpFlash: orpFT.checked });
-      syncOrpFlashRows();
+    focusFT.addEventListener('change', () => {
+      Prefs.save({ focusFlash: focusFT.checked });
+      syncFocusFlashRows();
     });
-    orpFI.addEventListener('input', () => {
-      const v = parseInt(orpFI.value, 10);
-      orpFIv.textContent = `${v} %`;
-      Prefs.save({ orpFlashIntensity: v });
+    focusFI.addEventListener('input', () => {
+      const v = parseInt(focusFI.value, 10);
+      focusFIv.textContent = `${v} %`;
+      Prefs.save({ focusFlashIntensity: v });
     });
-    orpFD.addEventListener('input', () => {
-      const v = parseInt(orpFD.value, 10);
-      orpFDv.textContent = `${v} ms`;
-      Prefs.save({ orpFlashDurationMs: v });
+    focusFD.addEventListener('input', () => {
+      const v = parseInt(focusFD.value, 10);
+      focusFDv.textContent = `${v} ms`;
+      Prefs.save({ focusFlashDurationMs: v });
     });
 
     // UI accent colour
@@ -2087,9 +2087,9 @@ const SettingsUI = {
       Prefs.save({ uiAccent: Prefs.DEFAULT_UI_ACCENT });
       this.applyToRoot();
     });
-    document.getElementById('uiAccentMatchOrp').addEventListener('click', () => {
-      uiC.value = Prefs.orpColor;
-      Prefs.save({ uiAccent: Prefs.orpColor });
+    document.getElementById('uiAccentMatchFocus').addEventListener('click', () => {
+      uiC.value = Prefs.focusColor;
+      Prefs.save({ uiAccent: Prefs.focusColor });
       this.applyToRoot();
     });
   }
@@ -2133,40 +2133,40 @@ function renderWord() {
   const tok = state.tokens[state.idx];
   if (!tok) return;
   const w = tok.text;
-  const o = orpIndex(w);
+  const o = focusIndex(w);
   const pre = w.slice(0, o);
-  const orp = w[o] || '';
+  const focusChar = w[o] || '';
   const post = w.slice(o + 1);
-  const wordClass = Prefs.orpEnabled ? 'word' : 'word no-orp';
+  const wordClass = Prefs.focusEnabled ? 'word' : 'word no-focus-letter';
 
-  // Center on ORP: build a measured row with the ORP character anchored to the rail center
+  // Center on focus letter: build a measured row with the focus letter anchored to the rail center
   wordRail.innerHTML = `
     <div class="${wordClass}">
-      <span class="pre">${escapeHtml(pre)}</span><span class="orp">${escapeHtml(orp)}</span><span class="post">${escapeHtml(post)}</span>
+      <span class="pre">${escapeHtml(pre)}</span><span class="focus-letter">${escapeHtml(focusChar)}</span><span class="post">${escapeHtml(post)}</span>
     </div>
   `;
 
-  // Adjust horizontal position so the ORP letter sits at the rail center
+  // Adjust horizontal position so the focus letter sits at the rail center
   requestAnimationFrame(() => {
-    const wordEl = wordRail.querySelector('.word, .word.no-orp');
-    const orpEl = wordRail.querySelector('.orp');
-    if (!wordEl || !orpEl) return;
+    const wordEl = wordRail.querySelector('.word, .word.no-focus-letter');
+    const focusEl = wordRail.querySelector('.focus-letter');
+    if (!wordEl || !focusEl) return;
     const wordRect = wordEl.getBoundingClientRect();
-    const orpRect = orpEl.getBoundingClientRect();
-    const orpCenter = (orpRect.left + orpRect.width / 2) - wordRect.left;
+    const focusRect = focusEl.getBoundingClientRect();
+    const focusCenter = (focusRect.left + focusRect.width / 2) - wordRect.left;
     const desiredCenter = wordRect.width / 2;
-    const shift = desiredCenter - orpCenter;
+    const shift = desiredCenter - focusCenter;
     wordEl.style.transform = `translateX(${shift}px)`;
 
     // Optional flash on word change
-    if (Prefs.orpEnabled && Prefs.orpFlash) {
-      orpEl.style.setProperty('--flash-dur', Prefs.orpFlashDurationMs + 'ms');
-      orpEl.style.setProperty('--flash-intensity', Prefs.orpFlashIntensity / 100);
+    if (Prefs.focusEnabled && Prefs.focusFlash) {
+      focusEl.style.setProperty('--flash-dur', Prefs.focusFlashDurationMs + 'ms');
+      focusEl.style.setProperty('--flash-intensity', Prefs.focusFlashIntensity / 100);
       // Restart the animation by toggling the class
-      orpEl.classList.remove('flash');
+      focusEl.classList.remove('flash');
       // Force reflow before re-adding so the animation restarts cleanly
-      void orpEl.offsetWidth;
-      orpEl.classList.add('flash');
+      void focusEl.offsetWidth;
+      focusEl.classList.add('flash');
     }
   });
 
@@ -2175,16 +2175,16 @@ function renderWord() {
   // the line doesn't jitter as surrounding words vary in length.
   const prev = state.tokens[state.idx - 1]?.text || '';
   const next = state.tokens[state.idx + 1]?.text || '';
-  // Always render the ORP span (even when highlighting is off) so we can
-  // measure its position. The .ctx-orp class only colours when enabled.
-  const nowOrpClass = (Prefs.orpEnabled && Prefs.orpInContext) ? 'ctx-orp' : 'ctx-orp ctx-orp-plain';
-  const nowHtml = `<span class="now"><span class="ctx-pre">${escapeHtml(pre)}</span><span class="${nowOrpClass}">${escapeHtml(orp)}</span><span class="ctx-post">${escapeHtml(post)}</span></span>`;
+  // Always render the focus letter span (even when highlighting is off) so we can
+  // measure its position. The .ctx-focus class only colours when enabled.
+  const nowFocusClass = (Prefs.focusEnabled && Prefs.focusInContext) ? 'ctx-focus' : 'ctx-focus ctx-focus-plain';
+  const nowHtml = `<span class="now"><span class="ctx-pre">${escapeHtml(pre)}</span><span class="${nowFocusClass}">${escapeHtml(focusChar)}</span><span class="ctx-post">${escapeHtml(post)}</span></span>`;
   contextEl.innerHTML = `<div class="context-line">${escapeHtml(prev)} ${nowHtml} ${escapeHtml(next)}</div>`;
 
-  // Shift the inner line horizontally so the ORP letter lands on the strip centre.
+  // Shift the inner line horizontally so the focus letter lands on the strip centre.
   requestAnimationFrame(() => {
     const line = contextEl.querySelector('.context-line');
-    const focal = contextEl.querySelector('.ctx-orp');
+    const focal = contextEl.querySelector('.ctx-focus');
     if (!line || !focal) return;
     const stripRect = contextEl.getBoundingClientRect();
     const focalRect = focal.getBoundingClientRect();
