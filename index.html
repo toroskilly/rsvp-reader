@@ -7,16 +7,24 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,600;9..144,800&family=JetBrains+Mono:wght@300;400;600&family=Atkinson+Hyperlegible:wght@400;700&family=Lexend:wght@400;500;700&family=Andika:wght@400;700&family=Comic+Neue:wght@400;700&family=Open+Sans:wght@400;600&family=Lato:wght@400;700&family=Nunito:wght@400;700&family=Nunito+Sans:wght@400;700&family=Source+Sans+3:wght@400;600&family=Inter:wght@400;600&family=Roboto:wght@400;700&family=Merriweather:wght@400;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,700&family=Crimson+Pro:wght@400;700&display=swap" rel="stylesheet">
 <style>
+  /* OpenDyslexic — self-hosted, SIL OFL 1.1. See /fonts/opendyslexic/OFL.txt */
   @font-face {
     font-family: 'OpenDyslexic';
-    src: url('https://opendyslexic.org/assets/fonts/OpenDyslexic3-d2c01a97d426dbf4de2e249d3c69da4d.woff2') format('woff2');
+    src: url('fonts/opendyslexic/OpenDyslexic-Regular.woff2') format('woff2');
     font-weight: 400;
     font-style: normal;
     font-display: swap;
   }
   @font-face {
+    font-family: 'OpenDyslexic';
+    src: url('fonts/opendyslexic/OpenDyslexic-Bold.woff2') format('woff2');
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
     font-family: 'OpenDyslexic Bold';
-    src: url('https://opendyslexic.org/assets/fonts/OpenDyslexic3-a53356d9f259f0daf9c82317c1c3fa77.woff2') format('woff2');
+    src: url('fonts/opendyslexic/OpenDyslexic-Bold.woff2') format('woff2');
     font-weight: 400;
     font-style: normal;
     font-display: swap;
@@ -1636,12 +1644,12 @@ const persisted = Store.load();
 
 // ---------- Font catalog ----------
 // readingFriendly: designed specifically for ADHD/dyslexia/low-vision
-// All Google-hosted except OpenDyslexic (loaded from opendyslexic.org)
+// All Google-hosted except OpenDyslexic (self-hosted; see fonts/opendyslexic/OFL.txt)
 const FONTS = [
   { name: 'Atkinson Hyperlegible', stack: "'Atkinson Hyperlegible', sans-serif", weights: [400, 700], friendly: true, badge: 'Top pick',  source: 'google', why: 'Built by the Braille Institute to maximize character distinction.' },
   { name: 'Lexend',                stack: "'Lexend', sans-serif",                weights: [400, 500, 700], friendly: true, badge: 'Research-backed', source: 'google', why: 'Designed around reading-proficiency research.' },
-  { name: 'OpenDyslexic',          stack: "'OpenDyslexic', sans-serif",          weights: [400], friendly: true, badge: 'Standard',  source: 'opendyslexic', file: 'https://opendyslexic.org/assets/fonts/OpenDyslexic3-d2c01a97d426dbf4de2e249d3c69da4d.woff2', why: 'Bottom-weighted letterforms anchor letters and prevent flipping.' },
-  { name: 'OpenDyslexic Bold',     stack: "'OpenDyslexic Bold', sans-serif",     weights: [400], friendly: true, badge: 'Bold',      source: 'opendyslexic', file: 'https://opendyslexic.org/assets/fonts/OpenDyslexic3-a53356d9f259f0daf9c82317c1c3fa77.woff2', why: 'Same letterforms as Standard, with heavier weight for extra anchoring.' },
+  { name: 'OpenDyslexic',          stack: "'OpenDyslexic', sans-serif",          weights: [400], friendly: true, badge: 'Standard',  source: 'opendyslexic', file: 'fonts/opendyslexic/OpenDyslexic-Regular.woff2', why: 'Bottom-weighted letterforms anchor letters and prevent flipping.' },
+  { name: 'OpenDyslexic Bold',     stack: "'OpenDyslexic Bold', sans-serif",     weights: [400], friendly: true, badge: 'Bold',      source: 'opendyslexic', file: 'fonts/opendyslexic/OpenDyslexic-Bold.woff2', why: 'Same letterforms as Standard, with heavier weight for extra anchoring.' },
   { name: 'Andika',                stack: "'Andika', sans-serif",                weights: [400, 700], friendly: true, badge: 'Reading-friendly', source: 'google', why: 'Designed for new readers; unambiguous letterforms.' },
   { name: 'Comic Neue',            stack: "'Comic Neue', sans-serif",            weights: [400, 700], friendly: true, badge: 'Underrated', source: 'google', why: 'Refined Comic Sans. Helps some ADHD/dyslexic readers.' },
   { name: 'Fraunces',              stack: "'Fraunces', serif",                   weights: [400, 600], source: 'google', why: 'Characterful serif. Default display font.' },
