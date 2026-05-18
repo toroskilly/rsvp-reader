@@ -488,8 +488,8 @@
     pointer-events: none;
     /* Mask the ghost numbers softly toward top/bottom so the wheel reads
        as a picker, not a stack of three labels. */
-    mask-image: linear-gradient(to bottom, transparent 0, #000 22%, #000 78%, transparent 100%);
-    -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 22%, #000 78%, transparent 100%);
+    mask-image: linear-gradient(to bottom, transparent 0, #000 12%, #000 88%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 12%, #000 88%, transparent 100%);
   }
   .wpm-wheel-num {
     font-family: var(--display);
@@ -499,12 +499,12 @@
     color: var(--ink);
   }
   .wpm-wheel-num:not(.wpm-wheel-num--ghost) {
-    font-size: 22px;
+    font-size: 34px;
   }
   .wpm-wheel-num--ghost {
-    font-size: 12px;
+    font-size: 18px;
     font-weight: 400;
-    opacity: 0.28;
+    opacity: 0.3;
   }
   .wpm-wheel-unit {
     margin-top: 2px;
@@ -2691,11 +2691,20 @@ function seekTo(idx) {
 //     • 1.00          = +SHUTTLE_MAX_MULT
 const SHUTTLE_MAX_MULT = 3;
 
+// Format a multiplier as "1x", "1.5x", "0.8x" etc — integer values
+// drop the decimal so the resting "1x" reads cleanly.
+function formatMult(m) {
+  const rounded = Math.round(m * 10) / 10;
+  return rounded === Math.floor(rounded)
+    ? `${Math.floor(rounded)}x`
+    : `${rounded.toFixed(1)}x`;
+}
+
 function syncShuttleLabel() {
   const label = document.getElementById('shuttleLabel');
   if (!label) return;
   label.textContent = state.playing
-    ? `${state.wpm} ▶ wpm`
+    ? `1x ▶ ${state.wpm}wpm`
     : 'Paused';
 }
 
@@ -2737,10 +2746,11 @@ function syncShuttleLabel() {
 
   function setLabel(mult) {
     if (!label) return;
-    const eff = Math.round(state.wpm * Math.abs(mult));
-    if (mult === 0)      label.textContent = '0 wpm';
-    else if (mult > 0)   label.textContent = `${eff} ▶ wpm`;
-    else                 label.textContent = `${eff} ◀ wpm`;
+    const absMult = Math.abs(mult);
+    const eff = Math.round(state.wpm * absMult);
+    if (mult === 0)      label.textContent = '0x · 0wpm';
+    else if (mult > 0)   label.textContent = `${formatMult(absMult)} ▶ ${eff}wpm`;
+    else                 label.textContent = `${formatMult(absMult)} ◀ ${eff}wpm`;
   }
 
   function applyFraction(f) {
