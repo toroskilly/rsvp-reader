@@ -2,6 +2,9 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0e0d0b">
+<meta name="color-scheme" content="dark">
 <title>textya · RSVP Reader</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -51,7 +54,15 @@
     color: var(--ink);
     font-family: var(--mono);
     min-height: 100vh;
+    min-height: 100dvh;
     overflow-x: hidden;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  /* Prevent iOS double-tap-to-zoom on interactive elements */
+  button, .switch, .font-card, summary {
+    touch-action: manipulation;
   }
 
   body {
@@ -1134,13 +1145,64 @@
     margin: 0 2px;
     background: transparent;
   }
+  /* ------------ Mobile / narrow viewports ------------ */
   @media (max-width: 640px) {
-    .app { padding: 20px 16px; }
-    .controls { grid-template-columns: 1fr; gap: 16px; }
-    .control-group { justify-content: center; }
-    .control-group.right { justify-content: center; }
-    header { flex-direction: column; align-items: flex-start; gap: 4px; }
+    .app { padding: 20px 16px; gap: 18px; }
+
+    header { flex-direction: column; align-items: flex-start; gap: 4px; padding-bottom: 14px; }
+    .brand { font-size: 28px; }
+
+    .stage { padding: 24px 0; }
     .word-frame { height: 160px; }
+    .progress-track { margin-bottom: 44px; }
+
+    /* Controls stack: WPM row on top, play button centred, transport below */
+    .controls { grid-template-columns: 1fr; gap: 14px; padding-top: 14px; }
+    .control-group { justify-content: center; flex-wrap: wrap; }
+    .control-group.right { justify-content: center; }
+
+    /* Bigger touch targets for chrome buttons (Apple HIG / Material both
+       recommend a 44 px minimum). The circular play button keeps its
+       dedicated dimensions. */
+    button { padding: 12px 16px; min-height: 44px; }
+    .stepper { flex-direction: row; gap: 6px; }
+    .stepper button { padding: 8px 12px; font-size: 10px; min-height: 36px; min-width: 36px; }
+    .mini-btn { min-height: 36px; padding: 8px 12px; }
+
+    /* Input panel: tighter chrome, single-column actions */
+    .panel { padding: 18px 14px; }
+    .panel-head { flex-direction: column; align-items: flex-start; gap: 4px; }
+    .panel-actions { flex-wrap: wrap; gap: 8px; }
+    .file-row { flex-wrap: wrap; }
+
+    /* Font picker: single-column grid, full visible height (no inner scroll) */
+    .font-grid {
+      grid-template-columns: 1fr;
+      max-height: none;
+      padding-right: 0;
+    }
+    .font-card { padding: 14px 16px; }
+
+    /* Settings: less indent, switches/sliders allowed to wrap */
+    .setting-row { gap: 10px; }
+    .setting-row.indent { padding-left: 0; }
+    .setting-row.indent.deeper { padding-left: 14px; }
+    .settings-group > summary { padding: 16px 0; }
+    .settings-group .group-subtitle { display: none; }
+
+    /* Calibration */
+    .calib-stats { flex-wrap: wrap; gap: 12px; }
+    .calib-actions { flex-wrap: wrap; gap: 8px; }
+  }
+
+  /* Very narrow phones (iPhone SE class, ~360 px) */
+  @media (max-width: 380px) {
+    .app { padding: 14px 12px; }
+    .brand { font-size: 24px; }
+    .word-frame { height: 140px; }
+    .wpm-display .num { font-size: 24px; min-width: 50px; }
+    .play-btn { width: 62px; height: 62px; }
+    .play-btn svg { width: 20px; height: 20px; }
   }
 </style>
 </head>
