@@ -1,4 +1,4 @@
-# Textya · RSVP Reader
+# textya · RSVP Reader
 
 A single-page RSVP (Rapid Serial Visual Presentation) reader.
 
