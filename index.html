@@ -452,7 +452,7 @@
     display: none;
     position: relative;
     width: 78px;
-    height: 168px;
+    height: 100px;
     border: 1px solid var(--rule);
     background: var(--bg-2);
     user-select: none;
@@ -499,10 +499,10 @@
     color: var(--ink);
   }
   .wpm-wheel-num:not(.wpm-wheel-num--ghost) {
-    font-size: 30px;
+    font-size: 22px;
   }
   .wpm-wheel-num--ghost {
-    font-size: 16px;
+    font-size: 12px;
     font-weight: 400;
     opacity: 0.28;
   }
@@ -537,20 +537,6 @@
     touch-action: none;
     overflow: visible;
   }
-  .shuttle-pause-zone {
-    position: absolute;
-    left: 0; top: 0;
-    width: 50%;
-    bottom: 0;
-    background: repeating-linear-gradient(
-      135deg,
-      color-mix(in srgb, var(--ink-faint) 60%, transparent) 0,
-      color-mix(in srgb, var(--ink-faint) 60%, transparent) 1px,
-      transparent 1px, transparent 7px);
-    opacity: 0.35;
-    border-radius: 999px 0 0 999px;
-    pointer-events: none;
-  }
   .shuttle-track {
     position: absolute;
     left: 12px; right: 12px;
@@ -558,19 +544,6 @@
     height: 1px;
     background: var(--rule);
     transform: translateY(-50%);
-    pointer-events: none;
-  }
-  /* The "own line" demarcating the paused zone — sits near the far-left
-     edge so the visual reads as "this is where the thumb lives when
-     paused (0.0×)". */
-  .shuttle-pause-mark {
-    position: absolute;
-    left: 14px;
-    top: 5px;
-    bottom: 5px;
-    width: 2px;
-    background: var(--ink-dim);
-    opacity: 0.7;
     pointer-events: none;
   }
   .shuttle-center {
@@ -587,7 +560,7 @@
   .shuttle-thumb {
     position: absolute;
     top: 50%;
-    left: 0%;                /* default = paused position (0×) */
+    left: 50%;               /* default = rest position (centre) */
     width: 20px;
     height: 20px;
     border-radius: 50%;
@@ -598,7 +571,10 @@
     box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 30%, transparent);
   }
   .shuttle.active .shuttle-thumb {
-    transition: background 120ms ease;  /* skip left transition — track finger */
+    /* While dragging, the thumb tracks the finger — no left transition,
+       otherwise the thumb lags behind. On release we restore the smooth
+       animation, so the thumb glides back to centre. */
+    transition: background 120ms ease;
     background: var(--accent);
     box-shadow: 0 0 0 5px color-mix(in srgb, var(--accent) 22%, transparent);
   }
@@ -1541,10 +1517,8 @@
     </div>
   </section>
 
-  <div class="shuttle" id="shuttle" role="slider" aria-disabled="true" aria-label="Speed: left half pauses; centre is normal speed; right edge is 3x">
-    <div class="shuttle-pause-zone" aria-hidden="true"></div>
+  <div class="shuttle" id="shuttle" role="slider" aria-disabled="true" aria-label="Speed shuttle: drag to scrub, releases to current playback state">
     <div class="shuttle-track" aria-hidden="true"></div>
-    <div class="shuttle-pause-mark" aria-hidden="true"></div>
     <div class="shuttle-center" aria-hidden="true"></div>
     <div class="shuttle-thumb" id="shuttleThumb" aria-hidden="true"></div>
     <div class="shuttle-label" id="shuttleLabel">Paused</div>
@@ -2452,9 +2426,6 @@ const state = {
   idx: 0,
   wpm: persisted.wpm && persisted.wpm >= 100 && persisted.wpm <= 1200 ? persisted.wpm : 400,
   playing: false,
-  // Shuttle multiplier: 0 = paused, 1 = play at normal WPM, > 1 = faster.
-  // Persists between gestures — see setupShuttle for the full semantics.
-  shuttleMult: 0,
   timer: null,
   startTime: 0,
   elapsedMs: 0,
@@ -2584,12 +2555,7 @@ function setPlayIcon(playing) {
 }
 
 // ---------- Playback ----------
-// Effective playback WPM is state.wpm * state.shuttleMult. The shuttle owns
-// the play/pause transition: setting mult to 0 pauses, setting it to > 0
-// resumes. play() and pause() are the public entry points (play button,
-// space key, etc.) and they set mult to 1 or 0 respectively before
-// delegating to the internal _doPlay / _doPause helpers.
-function _doPlay() {
+function play() {
   if (state.tokens.length === 0) return;
   if (state.idx >= state.tokens.length) state.idx = 0;
   // Auto-play and calibration are mutually exclusive — auto-tick rate
@@ -2597,30 +2563,19 @@ function _doPlay() {
   if (Calibrator.recording) Calibrator.stop();
   state.playing = true;
   setPlayIcon(true);
+  syncShuttleLabel();
   tick();
 }
 
-function _doPause() {
+function pause() {
   state.playing = false;
   setPlayIcon(false);
   if (state.timer) {
     clearTimeout(state.timer);
     state.timer = null;
   }
+  syncShuttleLabel();
   savePosition();
-}
-
-function play() {
-  if (state.tokens.length === 0) return;
-  state.shuttleMult = 1;
-  syncShuttleToState();
-  _doPlay();
-}
-
-function pause() {
-  state.shuttleMult = 0;
-  syncShuttleToState();
-  _doPause();
 }
 
 function tick() {
@@ -2632,9 +2587,7 @@ function tick() {
   renderWord();
   renderProgress();
   const tok = state.tokens[state.idx];
-  // shuttleMult is always > 0 while playing; coalesce defensively.
-  const effectiveWpm = state.wpm * (state.shuttleMult || 1);
-  const totalDur = durationFor(tok, effectiveWpm);
+  const totalDur = durationFor(tok, state.wpm);
   // Carve ISI out of the total — preserves WPM throughput regardless of ISI setting.
   // Clamp word-display to a minimum of 60ms (below this, comprehension drops sharply).
   const isi = Prefs.isiEnabled ? Prefs.isiMs : 0;
@@ -2719,33 +2672,31 @@ function seekTo(idx) {
 })();
 
 // ---------- Velocity shuttle (mobile only) ----------
-// Persistent speed multiplier — not a momentary scrubber. The strip is
-// split in half:
-//   - Right half: speeds from 1× (centre) up to SHUTTLE_MAX_MULT (right edge).
-//   - Left half:  paused, with its own marker line at the far-left edge.
-// The thumb follows the finger anywhere on the strip. On release it stays
-// where it was dropped — except in the paused half, where it snaps back to
-// the 0× marker on the left so the visual matches the "paused = 0.0×" rule.
-// The play / pause buttons mirror this: play sets mult to 1 (thumb animates
-// to the centre); pause sets mult to 0 (thumb animates back to the 0× edge).
+// Momentary scrubber. While held, the thumb follows the finger and drives
+// an rAF loop that advances/rewinds the word index at the speed implied by
+// the thumb position. On release the thumb glides back to the centre and
+// playback returns to whatever state it was in before the press.
+//
+// The position→speed mapping is piecewise and play-state aware:
+//
+//   When PLAYING:
+//     • centre (0.50) = 1×   (i.e. normal forward play)
+//     • 0.40          = 0×   (slow-stop crossing — the user's "40%" mark)
+//     • 0.00          = −SHUTTLE_MAX_MULT  (fast reverse)
+//     • 1.00          = +SHUTTLE_MAX_MULT  (fast forward)
+//
+//   When PAUSED:
+//     • centre (0.50) = 0×   (no motion — matches the rest state)
+//     • 0.00          = −SHUTTLE_MAX_MULT
+//     • 1.00          = +SHUTTLE_MAX_MULT
 const SHUTTLE_MAX_MULT = 3;
 
-function fractionForMult(m) {
-  if (m <= 0) return 0;
-  const capped = Math.min(m, SHUTTLE_MAX_MULT);
-  return 0.5 + (capped - 1) / (SHUTTLE_MAX_MULT - 1) * 0.5;
-}
-
-function syncShuttleToState() {
-  const thumb = document.getElementById('shuttleThumb');
+function syncShuttleLabel() {
   const label = document.getElementById('shuttleLabel');
-  if (!thumb) return;
-  thumb.style.left = (fractionForMult(state.shuttleMult) * 100) + '%';
-  if (label) {
-    label.textContent = state.shuttleMult <= 0
-      ? 'Paused'
-      : state.shuttleMult.toFixed(1) + '×';
-  }
+  if (!label) return;
+  label.textContent = state.playing
+    ? `${state.wpm} ▶ wpm`
+    : 'Paused';
 }
 
 (function setupShuttle() {
@@ -2753,58 +2704,109 @@ function syncShuttleToState() {
   const thumb   = $('shuttleThumb');
   const label   = $('shuttleLabel');
 
+  let active     = false;
+  let wasPlaying = false;
+  let curMult    = 0;
+  let rafId      = null;
+  let lastT      = 0;
+  let accWords   = 0;
+
   function fractionFromEvent(e) {
     const rect = shuttle.getBoundingClientRect();
     const f = ((e.clientX ?? 0) - rect.left) / rect.width;
     return Math.max(0, Math.min(1, f));
   }
 
-  function multFromFraction(f) {
-    if (f < 0.5) return 0;                                     // pause zone
-    return 1 + (f - 0.5) * 2 * (SHUTTLE_MAX_MULT - 1);         // [1, MAX]
+  // Piecewise linear, signed multiplier. Sign indicates direction.
+  function multFromFraction(f, playing) {
+    if (playing) {
+      if (f >= 0.5) {
+        // [0.5, 1.0] → [1, MAX]
+        return 1 + (f - 0.5) * 2 * (SHUTTLE_MAX_MULT - 1);
+      }
+      if (f >= 0.4) {
+        // [0.4, 0.5] → [0, 1]  (slow-stop region)
+        return (f - 0.4) * 10;
+      }
+      // [0, 0.4] → [−MAX, 0]
+      return (f - 0.4) * (SHUTTLE_MAX_MULT / 0.4);
+    }
+    // Paused: symmetric scrub around the centre.
+    return (f - 0.5) * 2 * SHUTTLE_MAX_MULT;
   }
 
-  // Translate a drag position into both the visual thumb position (which
-  // follows the finger continuously) and the playback state (which only
-  // changes when the multiplier crosses the play/pause threshold).
+  function setLabel(mult) {
+    if (!label) return;
+    const eff = Math.round(state.wpm * Math.abs(mult));
+    if (mult === 0)      label.textContent = '0 wpm';
+    else if (mult > 0)   label.textContent = `${eff} ▶ wpm`;
+    else                 label.textContent = `${eff} ◀ wpm`;
+  }
+
   function applyFraction(f) {
     thumb.style.left = (f * 100) + '%';
-    const mult = multFromFraction(f);
-    const prevMult = state.shuttleMult;
-    state.shuttleMult = mult;
-    if (mult === 0 && state.playing) {
-      _doPause();
-    } else if (mult > 0 && !state.playing && state.tokens.length > 0) {
-      _doPlay();
+    curMult = multFromFraction(f, wasPlaying);
+    setLabel(curMult);
+  }
+
+  function frame(t) {
+    if (!active) return;
+    if (!lastT) lastT = t;
+    const dt = (t - lastT) / 1000;
+    lastT = t;
+    const wordsThisFrame = (state.wpm * curMult / 60) * dt;
+    accWords += wordsThisFrame;
+    if (Math.abs(accWords) >= 1) {
+      const delta = Math.trunc(accWords);
+      accWords -= delta;
+      seek(delta);
     }
-    if (label) {
-      label.textContent = mult <= 0 ? 'Paused' : mult.toFixed(1) + '×';
-    }
-    // Calibrator should ignore the next sample whenever the multiplier
-    // changes meaningfully — the user is now driving the pace.
-    if (prevMult !== mult) Calibrator.invalidateNext();
+    rafId = requestAnimationFrame(frame);
   }
 
   shuttle.addEventListener('pointerdown', e => {
     if (state.tokens.length === 0) return;
+    active = true;
+    wasPlaying = state.playing;
+    // Halt the normal tick loop so it doesn't fight rAF for index control.
+    if (state.timer) { clearTimeout(state.timer); state.timer = null; }
+    state.playing = false;
+    setPlayIcon(false);
     shuttle.classList.add('active');
     try { shuttle.setPointerCapture(e.pointerId); } catch (_) {}
+    Calibrator.invalidateNext();
     applyFraction(fractionFromEvent(e));
+    lastT = 0;
+    accWords = 0;
+    rafId = requestAnimationFrame(frame);
     e.preventDefault();
   });
+
   shuttle.addEventListener('pointermove', e => {
-    if (!shuttle.classList.contains('active')) return;
+    if (!active) return;
     applyFraction(fractionFromEvent(e));
   });
+
   function endShuttle(e) {
-    if (!shuttle.classList.contains('active')) return;
+    if (!active) return;
+    active = false;
     shuttle.classList.remove('active');
     try { shuttle.releasePointerCapture(e.pointerId); } catch (_) {}
-    // Snap the thumb back to 0× when in the paused half — visual matches
-    // the spec ("when paused, the shuttle slider should revert to 0.0x").
-    if (state.shuttleMult === 0) {
-      thumb.style.left = '0%';
+    if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+    accWords = 0;
+    lastT    = 0;
+    curMult  = 0;
+    // Snap the thumb back to the middle (with the smooth transition the
+    // .active class was suppressing).
+    thumb.style.left = '50%';
+    // Restore the pre-press playback state. If it was playing, kick the
+    // normal tick loop back into life at 1× WPM.
+    if (wasPlaying) {
+      play();
+    } else {
+      syncShuttleLabel();
     }
+    wasPlaying = false;
   }
   shuttle.addEventListener('pointerup', endShuttle);
   shuttle.addEventListener('pointercancel', endShuttle);
@@ -2882,6 +2884,8 @@ function setWpm(v) {
   if (wheelNumUp) wheelNumUp.textContent = state.wpm + WPM_STEP <= WPM_MAX ? (state.wpm + WPM_STEP) : '';
   if (wheelNumDn) wheelNumDn.textContent = state.wpm - WPM_STEP >= WPM_MIN ? (state.wpm - WPM_STEP) : '';
   renderProgress();
+  // Keep the shuttle's rest-state label in sync with the chosen WPM.
+  if (typeof syncShuttleLabel === 'function') syncShuttleLabel();
   Store.save({ wpm: state.wpm });
 }
 
