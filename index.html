@@ -3284,7 +3284,16 @@ async function loadFromUrl(rawUrl) {
       text = await pdfBufferToText(buf);
     } else {
       // Jina renders the page server-side, so allow a generous timeout.
-      const res = await fetch('https://r.jina.ai/' + url.href, { signal: AbortSignal.timeout(20000) });
+      // X-Remove-Selector tells Jina to drop site chrome (nav menus, headers,
+      // footers, sidebars, banners) *before* it extracts the article, so the
+      // reader doesn't open on "Skip to content / Subscribe / Sign In".
+      const res = await fetch('https://r.jina.ai/' + url.href, {
+        signal: AbortSignal.timeout(20000),
+        headers: {
+          'X-Return-Format': 'markdown',
+          'X-Remove-Selector': 'header, nav, footer, aside, [role="navigation"], [role="banner"], [role="contentinfo"]',
+        },
+      });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const md = await res.text();
       text = markdownToText(md);
