@@ -11,8 +11,9 @@ End users on desktop or mobile browsers. The app is intentionally self-contained
 ## External Services & Credentials
 
 - **Google Fonts** (`fonts.googleapis.com`, `fonts.gstatic.com`) — loaded at runtime in `index.html:9–11`. Tracked as a Security Deviation (see below) until fonts are self-hosted.
+- **Jina Reader** (`r.jina.ai`) — user-initiated only. When a user fetches an article by URL (panel "Fetch URL" field or `#url=` hash param), the URL is sent to Jina, which bypasses CORS server-side and returns pre-extracted article Markdown. No credentials sent. Tracked as a Security Deviation (see below). See `loadFromUrl` in `index.html`.
 - **No credentials.** No API keys, no auth, no secrets.
-- **Future:** a Cloudflare Worker for URL-article extraction is under discussion (see README "Reading articles from URLs — design options"). Not yet built.
+- **Future:** a Cloudflare Worker for URL-article extraction is under discussion (see README "Reading articles from URLs — design options") as a self-hosted replacement for Jina. Not yet built.
 
 ## Constraints
 
@@ -45,7 +46,7 @@ End users on desktop or mobile browsers. The app is intentionally self-contained
 - **Approved frameworks:** vanilla browser APIs only. No CDN-loaded JS frameworks. PDF.js is inlined and version-pinned.
 - **Identity provider:** none — no accounts.
 - **Secret manager:** n/a — no secrets stored.
-- **Data classification:** all user input is local-only and never transmitted (current scope). Future Worker would transit user URLs server-side; privacy stance to be decided.
+- **Data classification:** pasted/dropped/imported text is local-only and never transmitted. The one exception: when a user fetches an article by URL, the **URL** (not the page text) is sent to Jina Reader for extraction. See the Jina deviation below.
 - **Compliance requirements:** none.
 - **Threat model:** the realistic attackers are (a) malicious URLs in `#url=` hash params from phishing links, (b) malicious PDFs dropped or fetched, (c) malicious HTML returned by `fetch()`. All inputs flow through `escapeHtml` (`index.html:2525`) before reaching any `innerHTML` sink, which is the load-bearing safety property.
 - **Prohibited patterns:** new uses of `innerHTML`, `outerHTML`, `document.write`, `insertAdjacentHTML`, `eval`, or `new Function()` without an explicit comment justifying why the input is trusted. Adding event-handler attributes (`onerror=`, `onclick=`) by string concatenation is banned.
@@ -80,11 +81,16 @@ The universal Tier 1 rules in `~/.claude/skills/secure-coding/SKILL.md` apply at
   - Rule deviated from: defense-in-depth against script injection
   - Reason: app currently relies on input encoding (`escapeHtml`) and DOM-text-only sinks; a CSP was never added.
   - Mitigation: the only `innerHTML` sinks pass values through `escapeHtml`; class names at those sinks are hardcoded, not interpolated from user input.
-  - Remediation plan: add `<meta http-equiv="Content-Security-Policy">` allowing `'self'` for scripts and `fonts.googleapis.com`/`fonts.gstatic.com` for fonts; verify nothing breaks.
+  - Remediation plan: add `<meta http-equiv="Content-Security-Policy">` allowing `'self'` for scripts, `fonts.googleapis.com`/`fonts.gstatic.com` for fonts, and `r.jina.ai` in `connect-src` for URL fetches; verify nothing breaks.
 
-- **2026-05-18 — No URL scheme allowlist on `#url=` fetch**
-  - Scope: `index.html:3200` (`fetch(urlParam)` in `loadFromHash`)
+- **2026-05-18 — No URL scheme allowlist on `#url=` fetch** — RESOLVED 2026-05-26
+  - Scope: `loadFromUrl` in `index.html` (now the single entry point for both `#url=` and the panel "Fetch URL" field).
   - Rule deviated from: input validation at trust boundaries
-  - Reason: original implementation passed the param straight to `fetch()`.
-  - Mitigation: browsers refuse `javascript:` and `file:` schemes in `fetch()` from a page context, so most dangerous schemes are blocked at the platform level.
-  - Remediation plan: parse with `new URL()` first, reject anything not in `['http:', 'https:']`, and add a request timeout via `AbortSignal.timeout(10_000)`.
+  - Resolution: URLs are parsed with `new URL()` and rejected unless the protocol is `http:`/`https:`; the fetch carries `AbortSignal.timeout(20000)`. Invalid or disallowed schemes show a toast and never trigger a request.
+
+- **2026-05-26 — Article URLs sent to Jina Reader (third party)**
+  - Scope: `loadFromUrl` in `index.html` (HTML-article branch → `https://r.jina.ai/<url>`).
+  - Rule deviated from: third-party exposure / privacy (user URLs transit a service we don't control; Jina may log them, and free-tier rate limits apply).
+  - Reason: the app is purely client-side, so direct `fetch()` to arbitrary articles is CORS-blocked; Jina bypasses CORS and returns clean pre-extracted Markdown in one call, with zero infra.
+  - Mitigation: user-initiated only (never automatic); `http:`/`https:` scheme allowlist before any request; 20s timeout; no credentials/cookies sent; only the URL leaves the browser (page text is whatever Jina returns and is rendered text-only through the existing `escapeHtml` path, so no new injection sink).
+  - Remediation plan: self-host extraction via the Cloudflare Worker described in the README ("Reading articles from URLs"), removing the third-party dependency and URL logging.
